@@ -169,3 +169,32 @@ pacman_qlearning_project/
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+## Training/evaluation correction (November 2026)
+
+The `fix/frozen-evaluation-and-training` branch fixes an evaluation bug:
+`Game._finish_episode()` calls `agent.end_episode()` after every episode,
+and previously this decayed epsilon even when `evaluate.py` had set epsilon to
+zero. A supposedly frozen evaluation could therefore become exploratory after
+the first episode. Read-only agents now skip epsilon decay, and a regression
+test covers this behavior.
+
+This correction makes the reported evaluation meaningful; it does **not**
+claim that the greater-than-90% target has been reached. Ghost movement and
+target-selection code are unchanged.
+
+Run training on the branch:
+
+```bash
+python -m unittest discover -s tests -v
+python train.py --until-target --eval-episodes 200 --check-every 100 --target 90 --resume
+```
+
+After training, evaluate the saved policy on a separate set of seeds:
+
+```bash
+python evaluate.py --qtable q_table.json --episodes 200 --seeds 95101 95102 95103 95104 95105
+```
+
+For a final 1,000-episode check, use five further unseen seeds with 200 episodes
+each. Keep final evaluation seeds out of training validation.
