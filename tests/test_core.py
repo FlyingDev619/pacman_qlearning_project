@@ -65,6 +65,12 @@ class AgentTests(unittest.TestCase):
         action = agent.choose_action((1, 2, 3), [0, 2])
         self.assertIn(action, [0, 2])
 
+    def test_read_only_evaluation_does_not_decay_epsilon(self):
+        agent = QLearningAgent(epsilon=0.0, epsilon_decay=0.5)
+        agent.read_only = True
+        agent.end_episode()
+        self.assertEqual(agent.epsilon, 0.0)
+
     def test_learning_updates_a_q_value(self):
         agent = QLearningAgent(alpha=0.5, gamma=0.0, epsilon=0.0)
         agent.learn((1,), 0, 2.0, (2,), [], terminal=True)

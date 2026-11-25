@@ -95,6 +95,10 @@ class QLearningAgent:
         current_values[action] = old_value + self.alpha * (target - old_value)
 
     def end_episode(self):
+        # Frozen-policy evaluation must not mutate exploration state. Game calls
+        # this after every episode, including evaluation episodes.
+        if self.read_only:
+            return
         self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
 
     def save(self, filename):
