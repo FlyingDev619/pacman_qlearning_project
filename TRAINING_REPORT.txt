@@ -1,0 +1,64 @@
+PAC-MAN Q-LEARNING - LEARNING IMPROVEMENT REPORT
+================================================
+
+Learning and training changes
+-----------------------------
+- Cached the strategic pellet target within an unchanged game snapshot to
+  avoid repeating identical path-distance scans during action selection.
+- Added an exploration reheat option when resuming a nearly converged table
+  (default resume epsilon: 0.25, instead of remaining at 0.05).
+- Resume training now evaluates the existing checkpoint first and only replaces
+  it when a later frozen-policy validation result is strictly better.
+- Training stops only when frozen-policy validation is strictly greater than
+  the requested target (default: >90%).
+- Independent evaluation keeps exploration and learning disabled and does not
+  insert unseen states into the Q-table.
+- The original maze and Chaser/Ambusher behavior are unchanged.
+
+Training experiments
+--------------------
+- Original checkpoint: 2,000 training episodes, 308,081 states.
+- Continued-training experiment: 600 additional episodes with exploration
+  reheated to 0.25 between 100-episode batches.
+- Continued checkpoint validation varied between 65% and 79%; it did not
+  demonstrate a reliable improvement and was not selected as the deliverable.
+- The original checkpoint was retained because it performed better on the
+  final held-out seed set.
+
+Independent frozen-policy evaluation
+------------------------------------
+The original checkpoint was evaluated on five held-out randomness seeds,
+50 episodes per seed (250 episodes total). Epsilon=0 and alpha=0.
+
+Seed       Wins     Episodes    Win rate
+95001      33       50          66.0%
+95002      35       50          70.0%
+95003      40       50          80.0%
+95004      36       50          72.0%
+95005      41       50          82.0%
+Combined   185      250         74.0%
+
+The continued-training candidate was evaluated on the same number of episodes
+using a separate held-out seed set and scored 180/250 (72.0%). On a direct
+same-seed comparison using seeds 95001-95005, the original checkpoint scored
+74.0%, so the candidate was rejected.
+
+Conclusion
+----------
+The requested win rate greater than 90% has NOT been achieved. The best
+retained checkpoint measured 74.0% over 250 independent episodes. The project
+must not claim a 90% win rate. More substantial policy/generalization work is
+needed; simply increasing tabular training episodes has not solved the task.
+
+Reproduce the independent evaluation
+-------------------------------------
+    python evaluate.py --qtable q_table.json --episodes 50 --seeds 95001 95002 95003 95004 95005
+
+Continue training until the target is reached (the existing checkpoint is
+evaluated first and is replaced only if the validation result improves):
+    python train.py --until-target --eval-episodes 100 --check-every 100 --target 90 --resume
+
+Unit tests
+----------
+    python -m unittest discover -s tests -v
+    19 tests passed.
